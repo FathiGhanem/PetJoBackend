@@ -1,0 +1,45 @@
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: petjo-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-petjo}
+      POSTGRES_USER: ${POSTGRES_USER:-petjo_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-petjo_password}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-petjo_user} -d ${POSTGRES_DB:-petjo}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - petjo-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: petjo-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - petjo-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  petjo-network:
+    name: petjo-network
+    driver: bridge

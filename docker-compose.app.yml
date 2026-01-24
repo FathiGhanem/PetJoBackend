@@ -1,0 +1,27 @@
+services:
+  # Python Backend Application
+  app:
+    build:
+      context: ./petJo
+      dockerfile: Dockerfile
+    container_name: petjo-app
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/app/src
+      - PYTHONUNBUFFERED=1
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - SECRET_KEY=${SECRET_KEY}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./petJo/src:/app/src
+    networks:
+      - petjo-network
+    command: python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+networks:
+  petjo-network:
+    name: petjo-network
+    external: true

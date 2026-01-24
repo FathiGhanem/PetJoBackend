@@ -1,0 +1,83 @@
+"""Constants for the application."""
+
+# Pet Status
+PET_STATUS_AVAILABLE = "available"
+PET_STATUS_ADOPTED = "adopted"
+PET_STATUS_LOST = "lost"
+PET_STATUS_FOUND = "found"
+PET_STATUS_HELP = "help"
+
+PET_STATUSES = [
+    PET_STATUS_AVAILABLE,
+    PET_STATUS_ADOPTED,
+    PET_STATUS_LOST,
+    PET_STATUS_FOUND,
+    PET_STATUS_HELP
+]
+
+# Pet Visibility
+PET_VISIBILITY_PUBLIC = "public"
+PET_VISIBILITY_PRIVATE = "private"
+
+PET_VISIBILITIES = [
+    PET_VISIBILITY_PUBLIC,
+    PET_VISIBILITY_PRIVATE
+]
+
+# User Roles
+ROLE_USER = "user"
+ROLE_ADMIN = "admin"
+
+USER_ROLES = [ROLE_USER, ROLE_ADMIN]
+
+# Report Target Types
+REPORT_TARGET_PET = "pet"
+REPORT_TARGET_ADVERTISEMENT = "advertisement"
+REPORT_TARGET_PROFILE = "profile"
+
+REPORT_TARGETS = [
+    REPORT_TARGET_PET,
+    REPORT_TARGET_ADVERTISEMENT,
+    REPORT_TARGET_PROFILE
+]
+
+# Pet Species
+SPECIES_DOG = "dog"
+SPECIES_CAT = "cat"
+SPECIES_BIRD = "bird"
+SPECIES_RABBIT = "rabbit"
+SPECIES_HAMSTER = "hamster"
+SPECIES_FISH = "fish"
+SPECIES_OTHER = "other"
+
+PET_SPECIES = [
+    SPECIES_DOG,
+    SPECIES_CAT,
+    SPECIES_BIRD,
+    SPECIES_RABBIT,
+    SPECIES_HAMSTER,
+    SPECIES_FISH,
+    SPECIES_OTHER
+]
+
+# Gender
+GENDER_MALE = "male"
+GENDER_FEMALE = "female"
+GENDER_UNKNOWN = "unknown"
+
+GENDERS = [GENDER_MALE, GENDER_FEMALE, GENDER_UNKNOWN]
+
+# Push Notification Providers
+PROVIDER_FCM = "fcm"  # Firebase Cloud Messaging
+PROVIDER_APNS = "apns"  # Apple Push Notification Service
+PROVIDER_WEB = "web"
+
+PUSH_PROVIDERS = [PROVIDER_FCM, PROVIDER_APNS, PROVIDER_WEB]
+
+# Pagination
+DEFAULT_PAGE_SIZE = 20
+MAX_PAGE_SIZE = 100
+
+# File Upload
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"]
