@@ -1,6 +1,7 @@
 """Repository for advertisement database operations."""
 from typing import List, Optional
 from sqlalchemy import select, func
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from uuid import UUID
 
@@ -12,8 +13,8 @@ from repositories.base import BaseRepository
 class AdvertisementRepository(BaseRepository[Advertisement]):
     """Repository for advertisement CRUD operations."""
     
-    def __init__(self):
-        super().__init__(Advertisement)
+    def __init__(self, db: AsyncSession):
+        super().__init__(Advertisement, db)
     
     async def get_by_user_id(
         self,

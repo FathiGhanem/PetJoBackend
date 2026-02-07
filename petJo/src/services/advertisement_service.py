@@ -15,8 +15,7 @@ class AdvertisementService(BaseService[Advertisement, AdvertisementRepository]):
     """Service for advertisement business logic."""
     
     def __init__(self, db: AsyncSession):
-        repository = AdvertisementRepository()
-        repository.db = db
+        repository = AdvertisementRepository(db)
         super().__init__(repository)
         self.db = db
     

@@ -81,8 +81,8 @@ async def search_pets(
 async def create_pet(
     name: str = Form(...),
     age: int = Form(...),
-    category_id: int = Form(...),
-    city_id: int = Form(...),
+    category_id: int = Form(..., gt=0),
+    city_id: int = Form(..., gt=0),
     description: str = Form(...),
     breed: Optional[str] = Form(None),
     gender: Optional[str] = Form(None),
