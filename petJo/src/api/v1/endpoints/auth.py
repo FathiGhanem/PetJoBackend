@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import logging
 
 from db.session import get_db
-from schemas.auth import Token, LoginRequest, RefreshTokenRequest
+from schemas.auth import Token, LoginRequest, RefreshTokenRequest, ResetPasswordRequest, ChangePasswordRequest
 from schemas.user import UserCreate, User as UserSchema
 from schemas.common import ApiResponse
 from dependencies import get_user_service, get_current_user_id
@@ -190,3 +190,69 @@ async def logout(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Could not logout"
         )
+
+
+@router.post(
+    "/reset-password",
+    response_model=ApiResponse[dict],
+    summary="Reset password",
+    description="Request a password reset (sends reset instructions)"
+)
+@limiter.limit(RATE_LIMITS["auth"])
+async def reset_password(
+    request: Request,
+    reset_data: ResetPasswordRequest,
+    user_service: UserService = Depends(get_user_service)
+):
+    """Request a password reset by email.
+    
+    Always returns success to prevent email enumeration.
+    """
+    logger.info(f"Password reset requested for: {reset_data.email}")
+    
+    # Always return success even if email doesn't exist (prevent enumeration)
+    # TODO: Implement actual email sending logic
+    
+    return ApiResponse(
+        success=True,
+        data={"message": "If an account with this email exists, password reset instructions have been sent"},
+        message="Password reset instructions sent"
+    )
+
+
+@router.post(
+    "/change-password",
+    response_model=ApiResponse[dict],
+    summary="Change password",
+    description="Change the current user's password (requires authentication)"
+)
+@limiter.limit(RATE_LIMITS["auth"])
+async def change_password(
+    request: Request,
+    password_data: ChangePasswordRequest,
+    user_id: str = Depends(get_current_user_id),
+    user_service: UserService = Depends(get_user_service)
+):
+    """Change the authenticated user's password."""
+    logger.info(f"Password change attempt for user: {user_id}")
+    
+    from uuid import UUID
+    success = await user_service.change_password(
+        user_id=UUID(user_id),
+        old_password=password_data.current_password,
+        new_password=password_data.new_password
+    )
+    
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid current password"
+        )
+    
+    logger.info(f"Password changed successfully for user: {user_id}")
+    
+    return ApiResponse(
+        success=True,
+        data={"message": "Password changed successfully"},
+        message="Password changed successfully"
+    )

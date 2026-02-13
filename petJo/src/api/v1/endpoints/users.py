@@ -21,7 +21,7 @@ class ChangePasswordRequest(BaseModel):
 router = APIRouter()
 
 
-@router.get("/me", response_model=User)
+@router.get("/me", response_model=ApiResponse[User])
 async def get_current_user(
     current_user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db)
@@ -36,10 +36,14 @@ async def get_current_user(
             detail="User not found"
         )
     
-    return user
+    return ApiResponse(
+        success=True,
+        data=user,
+        message="User profile retrieved successfully"
+    )
 
 
-@router.patch("/me", response_model=User)
+@router.patch("/me", response_model=ApiResponse[User])
 async def update_current_user(
     user_update: UserUpdate,
     current_user_id: str = Depends(get_current_user_id),
@@ -68,7 +72,11 @@ async def update_current_user(
     await db.commit()
     await db.refresh(user)
     
-    return user
+    return ApiResponse(
+        success=True,
+        data=user,
+        message="User profile updated successfully"
+    )
 
 
 @router.post("/me/change-password", response_model=ApiResponse[dict])

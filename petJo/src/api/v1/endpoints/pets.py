@@ -158,6 +158,29 @@ async def create_pet(
     return ApiResponse(success=True, data=pet, message="Pet created successfully")
 
 
+@router.post(
+    "/json",
+    response_model=ApiResponse[Pet],
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a new pet (JSON)",
+    description="Create a new pet listing from a JSON body (no photo uploads)"
+)
+async def create_pet_json(
+    pet_in: PetCreate,
+    current_user: User = Depends(get_current_active_user),
+    pet_service: PetService = Depends(get_pet_service)
+):
+    """Create a new pet listing from JSON. Photos can be uploaded separately."""
+    logger.info(f"Creating pet (JSON) for user {current_user.id}")
+
+    pet_data = pet_in.model_dump()
+    pet_data["owner_id"] = current_user.id
+
+    pet = await pet_service.create(pet_data)
+
+    return ApiResponse(success=True, data=pet, message="Pet created successfully")
+
+
 @router.get(
     "/",
     response_model=ApiResponse[PaginatedResponse[PetPublic]],

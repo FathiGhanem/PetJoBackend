@@ -11,6 +11,7 @@ from api.v1.endpoints import (
     pet_help,
     pet_photos,
     pets,
+    profiles,
     public,
     reports,
     upload,
@@ -22,6 +23,7 @@ api_router = APIRouter()
 
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
+api_router.include_router(profiles.router, prefix="/profiles", tags=["profiles"])
 api_router.include_router(pets.router, prefix="/pets", tags=["pets"])
 api_router.include_router(pet_photos.router, prefix="/pets", tags=["pet-photos"])
 api_router.include_router(favorites.router, prefix="/favorites", tags=["favorites"])

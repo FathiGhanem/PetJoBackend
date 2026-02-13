@@ -94,6 +94,33 @@ async def create_help_request(
     )
 
 
+@router.post(
+    "/json",
+    response_model=ApiResponse[PetHelpRequest],
+    status_code=status.HTTP_201_CREATED,
+    summary="Create help request (JSON)",
+    description="Create a new pet help request from a JSON body"
+)
+async def create_help_request_json(
+    help_in: PetHelpRequestCreate,
+    current_user: User = Depends(get_current_active_user),
+    help_service: PetHelpRequestService = Depends(get_pet_help_service)
+):
+    """Create a new pet help request from JSON."""
+    logger.info(f"Creating help request (JSON) for user {current_user.id}")
+
+    help_data = help_in.model_dump()
+    help_data["owner_id"] = current_user.id
+
+    help_request = await help_service.create(help_data)
+
+    return ApiResponse(
+        success=True,
+        data=help_request,
+        message="Help request created successfully"
+    )
+
+
 @router.get(
     "/",
     response_model=ApiResponse[PaginatedResponse[PetHelpRequestPublic]],
