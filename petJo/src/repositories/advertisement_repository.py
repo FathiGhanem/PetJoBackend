@@ -105,3 +105,25 @@ class AdvertisementRepository(BaseRepository[Advertisement]):
         )
         result = await self.db.execute(query)
         return list(result.scalars().all())
+
+    async def get_by_status_with_user(
+        self,
+        status: str,
+        skip: int = 0,
+        limit: int = 100
+    ) -> List[tuple]:
+        """Get advertisements by status with user information."""
+        query = (
+            select(
+                Advertisement,
+                User.email,
+                User.full_name
+            )
+            .join(User, Advertisement.user_id == User.id)
+            .where(Advertisement.status == status)
+            .order_by(Advertisement.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+        )
+        result = await self.db.execute(query)
+        return list(result.all())

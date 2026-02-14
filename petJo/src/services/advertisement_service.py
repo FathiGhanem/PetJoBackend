@@ -122,6 +122,14 @@ class AdvertisementService(BaseService[Advertisement, AdvertisementRepository]):
     ) -> List[Advertisement]:
         """Get pending advertisements (admin only)."""
         return await self.repository.get_by_status("pending", skip, limit)
+
+    async def get_pending_with_users(
+        self,
+        skip: int = 0,
+        limit: int = 100
+    ) -> List[tuple]:
+        """Get pending advertisements with user details (admin only)."""
+        return await self.repository.get_by_status_with_user("pending", skip, limit)
     
     async def count_pending(self) -> int:
         """Count pending advertisements."""

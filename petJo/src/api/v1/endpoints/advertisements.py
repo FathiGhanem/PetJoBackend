@@ -247,13 +247,32 @@ async def admin_get_pending_advertisements(
     service = AdvertisementService(db)
     skip = (page - 1) * page_size
     
-    ads = await service.get_pending_advertisements(skip=skip, limit=page_size)
+    ads_with_users = await service.get_pending_with_users(skip=skip, limit=page_size)
     total = await service.count_pending()
+    
+    # Transform to response format with user info
+    ads_response = []
+    for ad, user_email, user_name in ads_with_users:
+        ad_dict = {
+            "id": ad.id,
+            "user_id": ad.user_id,
+            "title": ad.title,
+            "description": ad.description,
+            "contact_phone": ad.contact_phone,
+            "status": ad.status,
+            "admin_notes": ad.admin_notes,
+            "created_at": ad.created_at,
+            "updated_at": ad.updated_at,
+            "reviewed_at": ad.reviewed_at,
+            "user_email": user_email,
+            "user_name": user_name
+        }
+        ads_response.append(ad_dict)
     
     return ApiResponse(
         success=True,
         data=PaginatedResponse(
-            items=ads,
+            items=ads_response,
             total=total,
             page=page,
             page_size=page_size,
@@ -294,7 +313,11 @@ async def admin_get_all_advertisements(
             "title": ad.title,
             "description": ad.description,
             "contact_phone": ad.contact_phone,
+            "status": ad.status,
+            "admin_notes": ad.admin_notes,
             "created_at": ad.created_at,
+            "updated_at": ad.updated_at,
+            "reviewed_at": ad.reviewed_at,
             "user_email": user_email,
             "user_name": user_name
         }
