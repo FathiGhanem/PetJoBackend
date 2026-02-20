@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -27,6 +27,8 @@ from schemas.pet import Pet as PetSchema
 from schemas.user import User as UserSchema
 from services.hero_service import HeroService
 from services.user_service import UserService
+from core.storage import get_storage_service
+from api.v1.endpoints.upload import validate_image
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -725,17 +727,31 @@ async def get_hero_by_id(
     response_model=ApiResponse[HeroSchema],
     status_code=status.HTTP_201_CREATED,
     summary="Create hero item (Admin only)",
-    description="Create a new hero section item. Requires super admin access."
+    description="Create a new hero section item with image upload. Requires super admin access."
 )
 async def create_hero(
-    hero_in: HeroCreate,
+    image: UploadFile = File(..., description="Hero banner image"),
+    link: str = Form(None, max_length=500, description="Optional link URL"),
     hero_service: HeroService = Depends(get_hero_service),
     current_user: User = Depends(get_current_superuser)
 ):
-    """Create new hero item. Admin only."""
+    """Create new hero item with image upload. Admin only."""
     logger.info(f"Admin {current_user.email} creating hero item")
     
-    hero_data = hero_in.model_dump()
+    # Validate and upload image
+    validate_image(image)
+    storage = get_storage_service()
+    img_url = await storage.upload_file(
+        file=image.file,
+        filename=image.filename,
+        content_type=image.content_type,
+        folder="heroes"
+    )
+    
+    hero_data = {"img_path": img_url}
+    if link:
+        hero_data["link"] = link
+    
     hero = await hero_service.create(hero_data)
     
     return ApiResponse(
@@ -749,11 +765,12 @@ async def create_hero(
     "/heroes/{hero_id}",
     response_model=ApiResponse[HeroSchema],
     summary="Update hero item (Admin only)",
-    description="Update a hero section item. Requires super admin access."
+    description="Update a hero section item. Optionally upload a new image. Requires super admin access."
 )
 async def update_hero(
     hero_id: int,
-    hero_update: HeroUpdate,
+    image: UploadFile = File(None, description="New hero banner image (optional)"),
+    link: str = Form(None, max_length=500, description="Optional link URL"),
     hero_service: HeroService = Depends(get_hero_service),
     current_user: User = Depends(get_current_superuser)
 ):
@@ -767,7 +784,38 @@ async def update_hero(
             detail="Hero item not found"
         )
     
-    update_data = hero_update.model_dump(exclude_unset=True)
+    update_data = {}
+    
+    # Upload new image if provided
+    if image and image.filename:
+        validate_image(image)
+        storage = get_storage_service()
+        
+        # Delete old image from bucket
+        if hero.img_path:
+            try:
+                await storage.delete_file(hero.img_path)
+            except Exception as e:
+                logger.warning(f"Failed to delete old hero image: {e}")
+        
+        img_url = await storage.upload_file(
+            file=image.file,
+            filename=image.filename,
+            content_type=image.content_type,
+            folder="heroes"
+        )
+        update_data["img_path"] = img_url
+    
+    if link is not None:
+        update_data["link"] = link
+    
+    if not update_data:
+        return ApiResponse(
+            success=True,
+            data=hero,
+            message="No changes provided"
+        )
+    
     updated_hero = await hero_service.update(hero_id, update_data)
     
     return ApiResponse(
@@ -797,6 +845,14 @@ async def delete_hero(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Hero item not found"
         )
+    
+    # Delete image from bucket
+    if hero.img_path:
+        try:
+            storage = get_storage_service()
+            await storage.delete_file(hero.img_path)
+        except Exception as e:
+            logger.warning(f"Failed to delete hero image from storage: {e}")
     
     success = await hero_service.delete(hero_id)
     
