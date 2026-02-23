@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import logging
 
 from db.session import get_db
-from schemas.auth import Token, LoginRequest, RefreshTokenRequest, ResetPasswordRequest, ChangePasswordRequest
+from schemas.auth import Token, LoginRequest, RefreshTokenRequest, ResetPasswordRequest, ChangePasswordRequest, GoogleLoginRequest
 from schemas.user import UserCreate, User as UserSchema
 from schemas.common import ApiResponse
 from dependencies import get_user_service, get_current_user_id
@@ -190,6 +190,53 @@ async def logout(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Could not logout"
         )
+
+
+@router.post(
+    "/google",
+    response_model=ApiResponse[Token],
+    summary="Google Sign-In",
+    description="Authenticate with a Google ID token obtained from the mobile client"
+)
+@limiter.limit(RATE_LIMITS["auth"])
+async def google_login(
+    request: Request,
+    body: GoogleLoginRequest,
+    user_service: UserService = Depends(get_user_service)
+):
+    """Verify a Google ID token and return JWT access/refresh tokens."""
+    logger.info("Google login attempt")
+
+    from exceptions import AuthenticationException
+
+    try:
+        user = await user_service.google_login_or_register(body.id_token)
+    except AuthenticationException:
+        raise
+    except Exception as e:
+        logger.error(f"Google login error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Google authentication failed"
+        )
+
+    if not user.is_active:
+        raise InactiveAccountException()
+
+    access_token = create_access_token(data={"sub": str(user.id)})
+    refresh_token = create_refresh_token(data={"sub": str(user.id)})
+
+    logger.info(f"Google login successful for user: {user.id}")
+
+    return ApiResponse(
+        success=True,
+        data={
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer"
+        },
+        message="Login successful"
+    )
 
 
 @router.post(

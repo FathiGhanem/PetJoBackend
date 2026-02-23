@@ -20,6 +20,13 @@ class UserRepository(BaseRepository[User]):
         )
         return result.scalar_one_or_none()
     
+    async def get_by_google_id(self, google_id: str) -> Optional[User]:
+        """Get user by Google sub/ID."""
+        result = await self.db.execute(
+            select(User).where(User.google_id == google_id)
+        )
+        return result.scalar_one_or_none()
+
     async def email_exists(self, email: str) -> bool:
         """Check if email already exists."""
         result = await self.db.execute(

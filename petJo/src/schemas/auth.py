@@ -29,3 +29,7 @@ class ResetPasswordRequest(BaseModel):
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
+
+
+class GoogleLoginRequest(BaseModel):
+    id_token: str  # Google ID token from the client (iOS/Android Firebase or Google Sign-In SDK)

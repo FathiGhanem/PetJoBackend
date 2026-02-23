@@ -67,6 +67,9 @@ class Settings(BaseSettings):
     # Local Storage (for development)
     LOCAL_STORAGE_URL: str = "http://localhost:8000/uploads"
     
+    # Google OAuth
+    GOOGLE_CLIENT_ID: Optional[str] = None
+
     # Pagination
     DEFAULT_PAGE_SIZE: int = 20
     MAX_PAGE_SIZE: int = 100
